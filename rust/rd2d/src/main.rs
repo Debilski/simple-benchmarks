@@ -32,9 +32,13 @@ fn r_step(dt: f64, u: f64, v: f64, c: &Config) -> (f64, f64) {
 
 #[inline]
 fn positive_modulo(i: usize, diff: i8, n: usize) -> usize {
-    if i == n - 1 && diff == 1 { 0 }
-    else if i == 0 && diff == -1 { n - 1 }
-    else { (i as isize + diff as isize) as usize }
+    if i == n - 1 && diff == 1 {
+        0
+    } else if i == 0 && diff == -1 {
+        n - 1
+    } else {
+        (i as isize + diff as isize) as usize
+    }
 }
 
 fn diff_step(
@@ -53,18 +57,42 @@ fn diff_step(
             tmp_uu[(i, j)] = (-4. * uu[(i, j)] + uu[(positive_modulo(i, -1, size_x), j)]
                 + uu[(positive_modulo(i, 1, size_x), j)]
                 + uu[(i, positive_modulo(j, -1, size_y))]
-                + uu[(i, positive_modulo(j, 1, size_y))]) * dt;
+                + uu[(i, positive_modulo(j, 1, size_y))]);
             tmp_vv[(i, j)] = (-4. * vv[(i, j)] + vv[(positive_modulo(i, -1, size_x), j)]
                 + vv[(positive_modulo(i, 1, size_x), j)]
                 + vv[(i, positive_modulo(j, -1, size_y))]
-                + vv[(i, positive_modulo(j, 1, size_y))]) * dt;
+                + vv[(i, positive_modulo(j, 1, size_y))]);
         }
     }
 
     for idx in 0..(uu.size_x() * uu.size_y()) {
-        uu[idx] = uu[idx] + 0.0028 * tmp_uu[idx];
-        vv[idx] = vv[idx] + 0.5 * tmp_vv[idx];
+        uu[idx] = uu[idx] + 0.0028 * tmp_uu[idx] * dt;
+        vv[idx] = vv[idx] + 0.5 * tmp_vv[idx] * dt;
     }
+}
+
+use std::error::Error;
+
+fn write_to_file(ar: Array2D, filename: String) -> Result<(), Box<Error>> {
+    use std::fs::File;
+    use std::io::prelude::*;
+    use std::path::Path;
+    use std::error::Error;
+    let path = Path::new(&filename);
+
+    let display = path.display();
+
+    // Open a file in write-only mode, returns `io::Result<File>`
+    let mut file = File::create(&path)?;
+
+    for i in 0..ar.size_x() {
+        for j in 0..ar.size_y() {
+            file.write(format!("{} ", ar[(i, j)]).as_bytes());
+        }
+        file.write(b"\n");
+    }
+
+    Ok(())
 }
 
 #[macro_use]
@@ -124,7 +152,7 @@ fn main() {
 
     let mut tmp_uu = Array2D::new(uu.size_x(), uu.size_y());
     let mut tmp_vv = Array2D::new(vv.size_x(), vv.size_y());
-    uu[(1, 1)] = 2.0;
+    uu[(1, 1)] = 1.0;
 
     {
         let _timeit = rd2d::AutoTimer::new();
@@ -143,32 +171,6 @@ fn main() {
         bar.finish();
     }
 
-    println!("{}", uu[(1, 1)]);
-    println!("{}", uu[(1, 2)]);
-
-    fn write_to_file(ar: Array2D, filename: String) {
-        use std::fs::File;
-        use std::io::prelude::*;
-        use std::path::Path;
-        use std::error::Error;
-        let path = Path::new(&filename);
-
-            let display = path.display();
-
-    // Open a file in write-only mode, returns `io::Result<File>`
-    let mut file = match File::create(&path) {
-        Err(ref why) => panic!("couldn't create {}: {}", display, why.description()),
-        Ok(file) => file,
-    };
-
-        for i in 0..ar.size_x() {
-            for j in 0..ar.size_y() {
-                file.write(format!("{} ", ar[(i, j)]).as_bytes());
-            }
-            file.write(b"\n");
-        }
-    }
-
-    write_to_file(uu, "uu.txt".to_string());
-    write_to_file(vv, "vv.txt".to_string());
+    write_to_file(uu, "uu.data".to_string());
+    write_to_file(vv, "vv.data".to_string());
 }

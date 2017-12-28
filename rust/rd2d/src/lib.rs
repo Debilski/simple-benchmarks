@@ -29,7 +29,7 @@ use std::ops::IndexMut;
 pub struct Array2D {
     size_x: usize,
     size_y: usize,
-    pub data: Vec<f64>,
+    data: Vec<f64>,
 }
 
 impl Array2D {
