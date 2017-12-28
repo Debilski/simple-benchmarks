@@ -1,0 +1,9 @@
+[package]
+name = "rd2d"
+version = "0.1.0"
+authors = ["Rike-Benjamin Schuppner <rikebs@debilski.de>"]
+
+[dependencies]
+time = "*"
+clap = "~2.29"
+indicatif = "*"
