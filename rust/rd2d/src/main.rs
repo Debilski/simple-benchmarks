@@ -32,8 +32,9 @@ fn r_step(dt: f64, u: f64, v: f64, c: &Config) -> (f64, f64) {
 
 #[inline]
 fn positive_modulo(i: usize, diff: i8, n: usize) -> usize {
-    let res = ((i as isize + diff as isize) % n as isize + n as isize) % n as isize;
-    res as usize
+    if i == n - 1 && diff == 1 { 0 }
+    else if i == 0 && diff == -1 { n - 1 }
+    else { (i as isize + diff as isize) as usize }
 }
 
 fn diff_step(
